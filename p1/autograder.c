@@ -81,15 +81,22 @@ int main(int argc, char *argv[])
     {
         parameters[i] = atoi(argv[2 + i]); // Convert String into Int bc argv stores args as strings
     }
-
+    //THIS CURRENTLY RUNS INDEPENDENTLY OF BATCH SIZE WHICH NEEDS TO BE IMPLEMENTED STILL
     for (int i = 0; i < total_lines; i++)
     { // loop through each executable
         for (int j = 0; j < number_of_parameters; j++)
         { // loop through each parameter for each executable
             char str[64];
             sprintf(str, "%d", parameters[j]); // assign parameter to string so its passable using execl
-            int process = execl(executable_array[i], str);
-            printf("%d", process);
+            int pid = fork();
+            if (pid == 0){//Child Process
+                int process = execl(executable_array[i], str);
+                printf("yes");
+            }
+            else{ //Parent Scenario
+                wait(NULL);
+            }
+            
         }
     }
 
