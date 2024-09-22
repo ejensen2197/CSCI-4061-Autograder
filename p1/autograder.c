@@ -89,13 +89,15 @@ int main(int argc, char *argv[])
             char str[64];
             sprintf(str, "%d", parameters[j]); // assign parameter to string so its passable using execl
             int pid = fork();
+            
             if (pid == 0){//Child Process
-                int process = execl(executable_array[i], str);
-                printf("yes");
+                printf("%s",str);
+                int process = execl(executable_array[i], executable_array[i], str, NULL); //Think this may be wrong
             }
             else{ //Parent Scenario
                 wait(NULL);
             }
+            
             
         }
     }
