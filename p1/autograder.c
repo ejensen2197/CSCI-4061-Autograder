@@ -162,13 +162,13 @@ int main(int argc, char *argv[])
                     {
                         int answer = WEXITSTATUS(status);
                         // update the array to reflect the answer associated with the pid
-                        update_status_codes(status_codes,result, i, answer,number_of_parameters);
-                        printf("Executable with PID %d finished with status: %d\n", result, answer);
+                        update_status_codes(status_codes,result, i, answer);
+                        
                     }
                     else if (WIFSIGNALED(status)) 
                     {
-                        update_status_codes(status_codes,result, i, 3, number_of_parameters);
-                        printf("Executable with PID %d was terminated by signal %d\n", result, WTERMSIG(status));
+                        update_status_codes(status_codes,result, i, 3);
+                        
                     }
                     num_finished++;
                 }
