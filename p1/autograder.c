@@ -8,6 +8,23 @@ void print_status()
     // TODO: write the status of each executable file to autograder.out. Your output should align with expected.out
 }
 
+// create a function to populate the status_codes array
+void update_status_codes(int **status_codes, pid_t pid, int index, int status)
+{
+    // Iterate through array trying to match pid
+    for (int i = 0; i < MAX_EXE; i++)
+    {
+        // first element is always the pid
+        if (status_codes[i][0] == pid) 
+        {
+            // updating this element with a 1,2, or 3
+            // ex) [[pid,1,2,2],[pid,1,1,2]]
+            status_codes[i][index] = status;
+            break;
+        }
+    }
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -81,26 +98,109 @@ int main(int argc, char *argv[])
     {
         parameters[i] = atoi(argv[2 + i]); // Convert String into Int bc argv stores args as strings
     }
-    //THIS CURRENTLY RUNS INDEPENDENTLY OF BATCH SIZE WHICH NEEDS TO BE IMPLEMENTED STILL
-    for (int i = 0; i < total_lines; i++)
-    { // loop through each executable
-        for (int j = 0; j < number_of_parameters; j++)
-        { // loop through each parameter for each executable
-            char str[64];
-            sprintf(str, "%d", parameters[j]); // assign parameter to string so its passable using execl
-            int pid = fork();
-            
-            if (pid == 0){//Child Process
-                printf("%s",str);
-                int process = execl(executable_array[i], executable_array[i], str, NULL); //Think this may be wrong
-            }
-            else{ //Parent Scenario
-                wait(NULL);
-            }
-            
-            
+    
+    int done_executables = 0;
+    
+    int status;
+
+    // organize in order of submissions.txt file 
+    // int status_codes[MAX_EXE][number_of_parameters];
+    
+    // 2D array using double pointers so it can be a dynamic size
+    int **status_codes = malloc(MAX_EXE * sizeof(int *));
+    if (status_codes == NULL) 
+    {
+        perror("Failed to allocate memory for status_codes");
+        exit(EXIT_FAILURE);
+    }
+
+    // loop through and allocate memory to store pid, and parameters in each element
+    for (int i = 0; i < MAX_EXE; i++) 
+    {
+        status_codes[i] = malloc((number_of_parameters +1) * sizeof(int));
+        if (status_codes[i] == NULL) 
+        {
+            perror("Failed to allocate memory for status_codes[i]");
+            exit(EXIT_FAILURE);
         }
     }
+
+    for (int i = 0; i < number_of_parameters; i++) 
+    {
+        int current_executable = 0;
+        while (done_executables < total_lines) 
+        {
+            for (int b = 0; b<batch_size; b++)
+            {
+                char str[64];
+                sprintf(str, "%d", parameters[i]);
+                pid_t pid = fork();
+
+                // store the pid in the first element of the array to associate the status codes of each pid
+                // status_codes[current_executable][0] = pid;
+                // malloc enough space to store pid and number of parameters in each space
+                
+                status_codes[current_executable][0] = pid; 
+
+                // have each child run one process
+                if (pid == 0)
+                {
+                    execl(executable_array[current_executable], executable_array[current_executable], str, NULL);
+                }
+                current_executable++;
+            }
+            // meant to be number of finished executables in the current batch
+            int num_finished = 0; 
+            
+            // runs while the current batch of executables is running
+            while (num_finished < batch_size) 
+            {
+                pid_t result = waitpid(-1,&status, WNOHANG);
+                if (result > 0) // an executable has finished   
+                {
+                    if (WEXITSTATUS(status)) 
+                    {
+                        int answer = WEXITSTATUS(status);
+                        // update the array to reflect the answer associated with the pid
+                        update_status_codes(status_codes,result, i, answer,number_of_parameters);
+                        printf("Executable with PID %d finished with status: %d\n", result, answer);
+                    }
+                    else if (WIFSIGNALED(status)) 
+                    {
+                        update_status_codes(status_codes,result, i, 3, number_of_parameters);
+                        printf("Executable with PID %d was terminated by signal %d\n", result, WTERMSIG(status));
+                    }
+                    num_finished++;
+                }
+                else if (result == 0)
+                {
+                    sleep(3);
+                }    
+            }
+        }
+    }
+
+    //THIS CURRENTLY RUNS INDEPENDENTLY OF BATCH SIZE WHICH NEEDS TO BE IMPLEMENTED STILL
+    // for (int i = 0; i < total_lines; i++)
+    // { // loop through each executable
+    //     for (int j = 0; j < number_of_parameters; j++)
+    //     { // loop through each parameter for each executable
+    //         char str[64];
+    //         sprintf(str, "%d", parameters[j]); // assign parameter to string so its passable using execl
+    //         int pid = fork();
+            
+    //         if (pid == 0){//Child Process
+    //             printf("%s",str);
+    //             int process = execl(executable_array[i], executable_array[i], str, NULL); //Think this may be wrong
+
+    //         }
+    //         else{ //Parent Scenario
+    //             wait(NULL);
+    //         }
+            
+            
+    //     }
+    // }
 
     // TODO: Write the status of each executable file from "submissions.txt" to autograder.out. For testing purposes, you can compare the results with the provided expected.out file
     print_status();
