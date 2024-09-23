@@ -17,7 +17,7 @@ void update_status_codes(int **status_codes, pid_t pid, int index, int status)
         // first element is always the pid
         if (status_codes[i][0] == pid) 
         {
-            // updating this element with a 1,2, or 3
+            // updating this element with a 0, 1, 2
             // ex) [[pid,1,2,2],[pid,1,1,2]]
             status_codes[i][index] = status;
             break;
@@ -50,11 +50,11 @@ int main(int argc, char *argv[])
         printf("submissions.txt was unable to be opened");
         return 1;
     }
-    int total_lines = 0;
+    int number_of_solutions = 0;
 
     while (fgets(line, sizeof(line), fptr) != NULL)
     { // Gets number of lines in submissions.txt to INIT executable array
-        total_lines += 1;
+        number_of_solutions += 1;
     }
 
     fclose(fptr);
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
         printf("submissions.txt was unable to be opened");
         return 1;
     }
-    char *executable_array[total_lines]; // INIT exectuable list for tracking
+    char *executable_array[number_of_solutions]; // INIT exectuable list for tracking
 
     int curr_line = 0;
 
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
         curr_line++;
     }
     // Removes the "\n at the end of each executable in the list"
-    for (int i = 0; i < total_lines; i++)
+    for (int i = 0; i < number_of_solutions; i++)
     {
         int length = strlen(executable_array[i]);
         executable_array[i][length - 1] = '\0'; // Replaces the last character of the string with the end string symbol '\0'
@@ -107,7 +107,17 @@ int main(int argc, char *argv[])
     // int status_codes[MAX_EXE][number_of_parameters];
     
     // 2D array using double pointers so it can be a dynamic size
-    int **status_codes = malloc(MAX_EXE * sizeof(int *));
+    int rows = MAX_EXE * number_of_parameters;
+    int cols = number_of_parameters + 1;
+    int *status_codes[rows][cols];
+
+    void free_1D_array(char *executable_array){
+    for (int i = 0; i < number_of_solutions; i++){
+        free(executable_array[i]);
+    }
+    free(executable_array);
+    }
+
     if (status_codes == NULL) 
     {
         perror("Failed to allocate memory for status_codes");
@@ -125,10 +135,21 @@ int main(int argc, char *argv[])
         }
     }
 
+    void free_2D_array(int *status_codes){
+        int rows = MAX_EXE * number_of_parameters;
+        for (int i = 0; i < rows; i++){
+            free(status_codes[i]);
+        }
+        free(status_codes);
+        
+        
+    }
+    
+
     for (int i = 0; i < number_of_parameters; i++) 
     {
-        int current_executable = 0;
-        while (done_executables < total_lines) 
+        int current_executable_number = 0;
+        while (done_executables < number_of_solutions) 
         {
             for (int b = 0; b<batch_size; b++)
             {
@@ -137,17 +158,17 @@ int main(int argc, char *argv[])
                 pid_t pid = fork();
 
                 // store the pid in the first element of the array to associate the status codes of each pid
-                // status_codes[current_executable][0] = pid;
+                // status_codes[current_executable_number][0] = pid;
                 // malloc enough space to store pid and number of parameters in each space
                 
-                status_codes[current_executable][0] = pid; 
+                status_codes[current_executable_number][0] = pid; 
 
                 // have each child run one process
                 if (pid == 0)
                 {
-                    execl(executable_array[current_executable], executable_array[current_executable], str, NULL);
+                    execl(executable_array[current_executable_number], executable_array[current_executable_number], str, NULL);
                 }
-                current_executable++;
+                current_executable_number++;
             }
             // meant to be number of finished executables in the current batch
             int num_finished = 0; 
@@ -155,24 +176,24 @@ int main(int argc, char *argv[])
             // runs while the current batch of executables is running
             while (num_finished < batch_size) 
             {
-                pid_t result = waitpid(-1,&status, WNOHANG);
-                if (result > 0) // an executable has finished   
+                pid_t child = waitpid(-1,&status, WNOHANG);
+                if (child > 0) // an executable has finished   
                 {
                     if (WEXITSTATUS(status)) 
                     {
                         int answer = WEXITSTATUS(status);
                         // update the array to reflect the answer associated with the pid
-                        update_status_codes(status_codes,result, i, answer);
+                        update_status_codes(status_codes,child, i, answer);
                         
                     }
                     else if (WIFSIGNALED(status)) 
                     {
-                        update_status_codes(status_codes,result, i, 3);
+                        update_status_codes(status_codes,child, i, 2); //Seg fault case insterts 2 into array associated with pid
                         
                     }
                     num_finished++;
                 }
-                else if (result == 0)
+                else if (child == 0)
                 {
                     sleep(3);
                 }    
@@ -181,7 +202,7 @@ int main(int argc, char *argv[])
     }
 
     //THIS CURRENTLY RUNS INDEPENDENTLY OF BATCH SIZE WHICH NEEDS TO BE IMPLEMENTED STILL
-    // for (int i = 0; i < total_lines; i++)
+    // for (int i = 0; i < number_of_solutions; i++)
     // { // loop through each executable
     //     for (int j = 0; j < number_of_parameters; j++)
     //     { // loop through each parameter for each executable
@@ -204,6 +225,7 @@ int main(int argc, char *argv[])
 
     // TODO: Write the status of each executable file from "submissions.txt" to autograder.out. For testing purposes, you can compare the results with the provided expected.out file
     print_status();
-
+    free_2D_array(status_codes);
+    free_1D_array(executable_array);
     return 0;
 }
