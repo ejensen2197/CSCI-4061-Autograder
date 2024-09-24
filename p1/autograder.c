@@ -2,10 +2,35 @@
 
 char line[128];
 
-void print_status()
+void print_status(int **status_codes, char **executable_array, int num_of_sols, int num_of_params)
 {
-
     // TODO: write the status of each executable file to autograder.out. Your output should align with expected.out
+    FILE *fptr = fopen("autograder.out", "w");
+    if (fptr == NULL)
+    {
+        printf("autograder.out was unable to be opened");
+    }
+
+    for (int i = 0; i < num_of_sols; i++){
+        char *executable_name = strrchr(executable_array[i], '/');
+        executable_name++;
+        fprintf(fptr, "%s", executable_name);
+        printf("%s", executable_name);
+        for (int j = 1; j <= num_of_params; j++){
+            printf(" %d", status_codes[i][j]);
+            if (status_codes[i][j] == 1){
+                fprintf(fptr, " %d(correct)", status_codes[i][j]);
+            }
+            else if (status_codes[i][j] == 2){
+                fprintf(fptr, " %d(incorrect)", status_codes[i][j]);
+            }
+            else if (status_codes[i][j] == 3){
+                fprintf(fptr, " %d(crash)", status_codes[i][j]);
+            }
+            fprintf(fptr, "\n");
+        }
+    }
+    fclose(fptr);
 }
 
 // create a function to populate the status_codes array
@@ -206,7 +231,7 @@ int main(int argc, char *argv[])
     // }
 
     // TODO: Write the status of each executable file from "submissions.txt" to autograder.out. For testing purposes, you can compare the results with the provided expected.out file
-    print_status();
+    print_status(status_codes, executable_array, total_lines, number_of_parameters);
 
     return 0;
 }
