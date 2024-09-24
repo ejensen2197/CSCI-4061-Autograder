@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
         parameters[i] = atoi(argv[2 + i]); // Convert String into Int bc argv stores args as strings
     }
     
-    int done_executables = 0;
+   
     
     int status;
 
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     // int status_codes[MAX_EXE][number_of_parameters];
     
     // 2D array using double pointers so it can be a dynamic size
-    int **status_codes = malloc(MAX_EXE * sizeof(int *));
+    int **status_codes = malloc((MAX_EXE + 1) * sizeof(int *));
     if (status_codes == NULL) 
     {
         perror("Failed to allocate memory for status_codes");
@@ -124,6 +124,7 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         }
     }
+     int done_executables = 0;
 
     for (int i = 0; i < number_of_parameters; i++) 
     {
@@ -158,6 +159,7 @@ int main(int argc, char *argv[])
                 pid_t result = waitpid(-1,&status, WNOHANG);
                 if (result > 0) // an executable has finished   
                 {
+                    done_executables += 1;
                     if (WEXITSTATUS(status)) 
                     {
                         int answer = WEXITSTATUS(status);
@@ -174,6 +176,7 @@ int main(int argc, char *argv[])
                 }
                 else if (result == 0)
                 {
+                    done_executables += 1;
                     sleep(3);
                 }    
             }
