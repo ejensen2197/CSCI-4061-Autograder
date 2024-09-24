@@ -24,7 +24,7 @@ void print_status(int **status_codes, char **executable_array, int num_of_sols, 
             else if (status_codes[i][j] == 1){
                 fprintf(fptr, " %d(incorrect)", status_codes[i][j]);
             }
-            else if (status_codes[i][j] == 2){
+            else{
                 fprintf(fptr, " %d(crash)", status_codes[i][j]);
             }
             fprintf(fptr, "\n");
@@ -185,11 +185,11 @@ int main(int argc, char *argv[])
                 if (result > 0) // an executable has finished   
                 {
                     done_executables += 1;
-                    if (WEXITSTATUS(status)) 
+                    if (WIFEXITED(status)) 
                     {
                         int answer = WEXITSTATUS(status);
                         // update the array to reflect the answer associated with the pid
-                        if (answer == 1){
+                        if (answer == 0 || answer == 1){
                             update_status_codes(status_codes,result, i + 1, answer);
                         }
                         
@@ -199,9 +199,9 @@ int main(int argc, char *argv[])
                         update_status_codes(status_codes,result, i + 1, 3);
                         
                     }
-                    else{
-                         update_status_codes(status_codes,result, i + 1, 2);
-                    }
+                    // else{
+                    //      update_status_codes(status_codes,result, i + 1, 2);
+                    // }
                     num_finished++;
                 }
                 else if (result == 0)
