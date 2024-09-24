@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
-
+#include <string.h>
 
 int main(int argc, char *argv[]) {
     if (argc < 2) {
@@ -12,8 +12,17 @@ int main(int argc, char *argv[]) {
 
     unsigned int seed = 0;
 
-    for (int i = 0; argv[0][i] != '\0'; i++) {
-        seed += (unsigned char)argv[0][i]; 
+    const char *last_slash = strrchr(argv[0], '/');
+    if (last_slash) {
+       // Move pointer to the character after the last backslash
+       last_slash++;  
+    } else {
+       // If no backslash is found, start from the beginning
+       last_slash = argv[0];
+    }
+
+    for (int i = 0; last_slash[i] != '\0'; i++) {
+       seed += (unsigned char)last_slash[i];
     }
     
     unsigned int pi = atoi(argv[1]);    
