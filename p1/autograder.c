@@ -105,6 +105,7 @@ int main(int argc, char *argv[])
     char *executable_array[total_lines]; // INIT exectuable list for tracking
 
     int curr_line = 0;
+    int num_of_sols = 0;
 
     while (fgets(line, sizeof(line), fptr1) != NULL)
     {                                                           // Gets each line of submissions.txt. This includes the Newline after each file
@@ -117,6 +118,7 @@ int main(int argc, char *argv[])
         }
         strcpy(executable_array[curr_line], line); // Malloc success case and inserts each line into array
         curr_line++;
+        num_of_sols++;
     }
     // Removes the "\n at the end of each executable in the list"
     for (int i = 0; i < total_lines; i++)
@@ -227,7 +229,7 @@ for (int i = 0; i < number_of_parameters; i++)
 }
 
     print_status(status_codes, executable_array, total_lines, number_of_parameters, parameters);
-    free_executables(executable_array, total_lines);
-    free_status(status_codes, 20);
+    free_executables(executable_array, num_of_sols);
+    free_status(status_codes, num_of_sols);
     return 0;
 }
