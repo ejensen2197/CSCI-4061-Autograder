@@ -30,6 +30,19 @@ void print_status(int **status_codes, char **executable_array, int num_of_sols, 
     fclose(fptr);
 }
 
+void free_executables(char **executable_array, int total_lines){
+    for (int i = 0; i < total_lines; i++){
+        free(executable_array[i]);
+    }
+}
+
+void free_status(int **status_codes, int total_length){
+    for (int i = 0; i < total_length; i++){
+        free(status_codes[i]);
+    }
+    free(status_codes);
+}
+
 // create a function to populate the status_codes array
 void update_status_codes(int **status_codes, pid_t pid, int index, int status)
 {
@@ -139,7 +152,7 @@ int main(int argc, char *argv[])
     // loop through and allocate memory to store pid, and parameters in each element
     for (int i = 0; i < MAX_EXE; i++) 
     {
-        status_codes[i] = malloc((number_of_parameters +1) * sizeof(int));
+        status_codes[i] = malloc((number_of_parameters + 1) * sizeof(int));
         if (status_codes[i] == NULL) 
         {
             perror("Failed to allocate memory for status_codes[i]");
@@ -211,8 +224,8 @@ for (int i = 0; i < number_of_parameters; i++)
     }
 }
 
-
     print_status(status_codes, executable_array, total_lines, number_of_parameters, parameters);
-
+    free_executables(executable_array, total_lines);
+    free_status(status_codes, (MAX_EXE + 1));
     return 0;
 }
