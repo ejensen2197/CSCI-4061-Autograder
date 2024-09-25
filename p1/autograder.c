@@ -38,7 +38,9 @@ void free_executables(char **executable_array, int total_lines){
 
 void free_status(int **status_codes, int total_length){
     for (int i = 0; i < total_length; i++){
-        free(status_codes[i]);
+        if(status_codes[i] != NULL){
+            free(status_codes[i]);
+        }
     }
     free(status_codes);
 }
@@ -226,6 +228,6 @@ for (int i = 0; i < number_of_parameters; i++)
 
     print_status(status_codes, executable_array, total_lines, number_of_parameters, parameters);
     free_executables(executable_array, total_lines);
-    free_status(status_codes, (MAX_EXE + 1));
+    free_status(status_codes, 20);
     return 0;
 }
