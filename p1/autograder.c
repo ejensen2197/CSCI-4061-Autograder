@@ -1,27 +1,31 @@
 #include "include/utility.h"
 
 char line[128];
+char str[64];
 
 void print_status(int **status_codes, char **executable_array, int num_of_sols, int num_of_params,int* parameters)
 {
-    // TODO: write the status of each executable file to autograder.out. Your output should align with expected.out
     FILE *fptr = fopen("autograder.out", "w");
     if (fptr == NULL)
     {
         printf("autograder.out was unable to be opened");
     }
-    for (int i = 0; i < num_of_sols; i++){
+    for (int i = 0; i < num_of_sols; i++)
+    {
         char *executable_name = strrchr(executable_array[i], '/');
         executable_name++;
-        fprintf(fptr, " %s", executable_name);
+        fprintf(fptr, "%s", executable_name);
         for (int j = 0; j < num_of_params; j++){
-            if (status_codes[i][j+1] == 0){
+            if (status_codes[i][j+1] == 0)
+            {
                 fprintf(fptr, " %d(correct)", parameters[j]);
             }
-            else if (status_codes[i][j+1] == 1){
+            else if (status_codes[i][j+1] == 1)
+            {
                 fprintf(fptr, " %d(incorrect)", parameters[j]);
             }
-            else{
+            else
+            {
                 fprintf(fptr, " %d(crash)", parameters[j]);
             }
         }
@@ -30,15 +34,20 @@ void print_status(int **status_codes, char **executable_array, int num_of_sols, 
     fclose(fptr);
 }
 
-void free_executables(char **executable_array, int total_lines){
-    for (int i = 0; i < total_lines; i++){
+void free_executables(char **executable_array, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
         free(executable_array[i]);
     }
 }
 
-void free_status(int **status_codes, int total_length){
-    for (int i = 0; i < total_length; i++){
-        if(status_codes[i] != NULL){
+void free_status(int **status_codes, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
+        if(status_codes[i] != NULL)
+        {
             free(status_codes[i]);
         }
     }
@@ -64,7 +73,6 @@ void update_status_codes(int **status_codes, pid_t pid, int index, int status)
 
 int main(int argc, char *argv[])
 {
-
     // ANY FUTHER ARGUMENTS AFTER 1 (which is batch size) ARE PARAMETERS THAT NEED TO BE CHECKED
     if (argc < 2)
     {
@@ -164,71 +172,67 @@ int main(int argc, char *argv[])
         }
     }
 
-for (int i = 0; i < number_of_parameters; i++) 
-{
-    int done_executables = 0; // Reset this for each parameter run
-    int current_executable = 0;
-
-    while (done_executables < total_lines) 
+    for (int i = 0; i < number_of_parameters; i++) 
     {
-        // Fork a batch of processes
-        int batch_count = 0; // Track how many were forked in the current batch
-        for (int b = 0; b < batch_size && current_executable < total_lines; b++) // Ensure we don't exceed total lines
+        int done_executables = 0; // Reset this for each parameter run
+        int current_executable = 0;
+
+        while (done_executables < total_lines) 
         {
-            char str[64];
-            sprintf(str, "%d", parameters[i]); // Format the parameter into string so can be passed into exec
+            // Fork a batch of processes
+            int batch_count = 0; // Track how many were forked in the current batch
+            int num_finished = 0; // Track the number of finished children and later compare to the batch count
 
-            pid_t pid = fork();
-
-            if (pid < 0) 
+            for (int b = 0; b < batch_size && current_executable < total_lines; b++) // Ensure we don't exceed total lines
             {
-                perror("Fork failed");
-                exit(1);
-            }
+                sprintf(str, "%d", parameters[i]); // Format the parameter into string so can be passed into exec
 
-            // store the pid in the first element of the array to associate the status codes of each pid
-            status_codes[current_executable][0] = pid;
+                pid_t pid = fork();
 
-            if (pid == 0) // Child process
-            {
-                char *executable_name = strrchr(executable_array[current_executable], '/');
-                executable_name++;
-                execl(executable_array[current_executable], executable_name, str, NULL);
-                
-            }
-
-            current_executable++; // Move to the next executable
-            batch_count++; // Increment the number of processes in the current batch
-        }
-
-        // Now wait for the current batch to finish
-        int num_finished = 0;
-
-        while (num_finished < batch_count) // Wait for all in the current batch to finish
-        {
-            pid_t result_pid = waitpid(-1, &status, 0); 
-            if (result_pid > 0) 
-            {
-                if (WIFEXITED(status)) 
+                if (pid < 0) 
                 {
-                    int answer = WEXITSTATUS(status);
-                    if (answer == 0 || answer == 1) 
-                    {
-                        update_status_codes(status_codes, result_pid, i + 1, answer);
-                    }
-                } 
-                else if (WIFSIGNALED(status)) 
-                {
-                    update_status_codes(status_codes, result_pid, i + 1, 3);
+                    perror("Fork failed");
+                    exit(1);
                 }
-                num_finished++; // Successfully handled one process
-                done_executables++; // Track total finished
+
+                // store the pid in the first element of the array to associate the status codes of each pid
+                status_codes[current_executable][0] = pid;
+
+                if (pid == 0) // Child process
+                {
+                    char *executable_name = strrchr(executable_array[current_executable], '/');
+                    executable_name++;
+                    execl(executable_array[current_executable], executable_name, str, NULL);
+                }
+                current_executable++; // Move to the next executable
+                batch_count++; // Increment the number of processes in the current batch
+            }
+            while (num_finished < batch_count) // Wait for all in the current batch to finish
+            {
+                pid_t result_pid = waitpid(-1, &status, 0); 
+                if (result_pid > 0) 
+                {
+                    if (WIFEXITED(status)) 
+                    {
+                        int answer = WEXITSTATUS(status);
+                        if (answer == 0 || answer == 1) 
+                        {
+                            update_status_codes(status_codes, result_pid, i + 1, answer);
+                        }
+                    } 
+                    else
+                    {
+                        update_status_codes(status_codes, result_pid, i + 1, 3);
+                    }
+                    num_finished++; // Successfully handled one process
+                    done_executables++; // Track total finished
+                }
             }
         }
     }
-}
-
+    // Write the status codes out into the autograder.out file
     print_status(status_codes, executable_array, total_lines, number_of_parameters, parameters);
+    // Free the array's we used
     free_executables(executable_array, num_of_sols);
     free_status(status_codes, num_of_sols);
     return 0;
