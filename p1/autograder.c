@@ -34,6 +34,7 @@ void print_status(int **status_codes, char **executable_array, int num_of_sols, 
     fclose(fptr);
 }
 
+
 void free_executables(char **executable_array, int size)
 {
     for (int i = 0; i < size; i++)
@@ -41,6 +42,7 @@ void free_executables(char **executable_array, int size)
         free(executable_array[i]);
     }
 }
+
 
 void free_status(int **status_codes, int size)
 {
@@ -53,6 +55,7 @@ void free_status(int **status_codes, int size)
     }
     free(status_codes);
 }
+
 
 // create a function to populate the status_codes array
 void update_status_codes(int **status_codes, pid_t pid, int index, int status)
@@ -71,49 +74,85 @@ void update_status_codes(int **status_codes, pid_t pid, int index, int status)
     }
 }
 
-int main(int argc, char *argv[])
-{
-    // ANY FUTHER ARGUMENTS AFTER 1 (which is batch size) ARE PARAMETERS THAT NEED TO BE CHECKED
-    if (argc < 2)
-    {
-        printf("Usage: %s <batch> <p1> <p2> ... <pn>\n", argv[0]);
-        return 1;
-    }
 
-    // Convert the first command-line argument to an integer to determine the batch size
-    int batch_size = atoi(argv[1]);
-
-    // write the file paths from the "solutions" directory into the submissions.txt file
-    write_filepath_to_submissions("solutions", "submissions.txt");
-
-    // COMPLETE: read the executable filename from submissions.txt
-
-    // INIT file pointer and open file. Prints error statement if submissions.txt fails for some reason
+int get_total_lines(){
+    int total_lines = 0;
     FILE *fptr = fopen("submissions.txt", "r");
     if (fptr == NULL)
     {
         printf("submissions.txt was unable to be opened");
-        return 1;
+        exit(0);
     }
-    int total_lines = 0;
-
     while (fgets(line, sizeof(line), fptr) != NULL)
     { // Gets number of lines in submissions.txt to INIT executable array
         total_lines += 1;
     }
 
     fclose(fptr);
+    return total_lines;
+}
 
+
+int get_number_of_parameters(int argc){
+    int number_of_parameters = (argc - 2); // Needs to subtract two because one argument is file name and another is the batch size
+    return number_of_parameters;
+}
+
+
+int* initialize_and_populate_parameter_array(int number_of_parameters, char *argv[]) {
+    
+    int* parameters = malloc(number_of_parameters * sizeof(int));
+
+    if (parameters == NULL) {
+        perror("Memory allocation failed");
+        exit(0);
+    }
+
+    // Populate the array with command-line arguments converted to integers
+    for (int i = 0; i < number_of_parameters; i++) {
+        parameters[i] = atoi(argv[2 + i]); // Convert String into Int as argv stores args as strings
+    }
+    
+    return parameters;
+}
+
+
+
+int** create_status_codes_array(int number_of_parameters,int num_of_sols){
+    int **status_codes = malloc((num_of_sols + 1) * sizeof(int *));
+    if (status_codes == NULL) 
+    {
+        perror("Failed to allocate memory for status_codes");
+        exit(EXIT_FAILURE);
+    }
+
+    // loop through and allocate memory to store pid, and parameters in each element
+    for (int i = 0; i < num_of_sols; i++) 
+    {
+        //Makes room for params plus a PID for matching
+        status_codes[i] = malloc((number_of_parameters + 1) * sizeof(int));
+        if (status_codes[i] == NULL) 
+        {
+            perror("Failed to allocate memory for status_codes[i]");
+            exit(EXIT_FAILURE);
+        }
+    }
+    return status_codes;
+}
+
+
+
+//Initializes the executable array with the executables from submissions.txt
+int initialize_executable_array(char** executable_array, int total_lines){
+    int curr_line = 0;
+    int num_of_sols = 0;
     FILE *fptr1 = fopen("submissions.txt", "r");
+
     if (fptr1 == NULL)
     {
         printf("submissions.txt was unable to be opened");
         return 1;
     }
-    char *executable_array[total_lines]; // INIT exectuable list for tracking
-
-    int curr_line = 0;
-    int num_of_sols = 0;
 
     while (fgets(line, sizeof(line), fptr1) != NULL)
     {                                                           // Gets each line of submissions.txt. This includes the Newline after each file
@@ -136,42 +175,12 @@ int main(int argc, char *argv[])
     }
 
     fclose(fptr1);
+    return num_of_sols;
+}
 
-    // TODO: For each parameter, run all executables in batch size chunks
-    int number_of_parameters = (argc - 2); // Needs to subtract two because one argument is file name and another is the batch size
-    int parameters[number_of_parameters];  // Init a parameter array
 
-    for (int i = 0; i < number_of_parameters; i++)
-    {
-        parameters[i] = atoi(argv[2 + i]); // Convert String into Int bc argv stores args as strings
-    }
-    
-   
-    
-    int status;
 
-    // organize in order of submissions.txt file 
-    // int status_codes[MAX_EXE][number_of_parameters];
-    
-    // 2D array using double pointers so it can be a dynamic size
-    int **status_codes = malloc((MAX_EXE + 1) * sizeof(int *));
-    if (status_codes == NULL) 
-    {
-        perror("Failed to allocate memory for status_codes");
-        exit(EXIT_FAILURE);
-    }
-
-    // loop through and allocate memory to store pid, and parameters in each element
-    for (int i = 0; i < MAX_EXE; i++) 
-    {
-        status_codes[i] = malloc((number_of_parameters + 1) * sizeof(int));
-        if (status_codes[i] == NULL) 
-        {
-            perror("Failed to allocate memory for status_codes[i]");
-            exit(EXIT_FAILURE);
-        }
-    }
-
+void run_executables(int **status_codes, int* parameters, char** executable_array, int number_of_parameters, int total_lines, int batch_size, int status){
     for (int i = 0; i < number_of_parameters; i++) 
     {
         int done_executables = 0; // Reset this for each parameter run
@@ -230,10 +239,60 @@ int main(int argc, char *argv[])
             }
         }
     }
+}
+
+
+
+
+int main(int argc, char *argv[])
+{
+    // ANY FUTHER ARGUMENTS AFTER 1 (which is batch size) ARE PARAMETERS THAT NEED TO BE CHECKED
+    if (argc < 2)
+    {
+        printf("Usage: %s <batch> <p1> <p2> ... <pn>\n", argv[0]);
+        return 1;
+    }
+
+    // Convert the first command-line argument to an integer to determine the batch size
+    int batch_size = atoi(argv[1]);
+
+    // write the file paths from the "solutions" directory into the submissions.txt file
+    write_filepath_to_submissions("solutions", "submissions.txt");
+
+    // COMPLETE: read the executable filename from submissions.txt
+
+    //Get total number of lines from submissions.txt
+    int total_lines = get_total_lines();
+
+    //Create executable array with space correlating to amount of exe that will need to be run.
+    char *executable_array[total_lines];
+
+    //Populates the executable array
+    int num_of_sols = initialize_executable_array(executable_array,total_lines);
+
+    //Gets number of Parameters using argc from main
+    int number_of_parameters = get_number_of_parameters(argc); 
+
+    //Inits and populates the paramters array
+    int* parameters = initialize_and_populate_parameter_array(number_of_parameters, argv);
+   
+    //Status Var to hold 0 1 or 2
+    int status = -1; 
+
+    //Inits and populates the status codes 2D array. Uses number of parameters and number of solutions for size to ensure dynamic possibility
+    int **status_codes = create_status_codes_array(number_of_parameters,num_of_sols);
+   
+   //Runs the executables and updates the status codes array 
+    run_executables(status_codes, parameters, executable_array, number_of_parameters,total_lines,batch_size,status);
+
     // Write the status codes out into the autograder.out file
     print_status(status_codes, executable_array, total_lines, number_of_parameters, parameters);
-    // Free the array's we used
+
+    // Free the executable array we used
     free_executables(executable_array, num_of_sols);
+
+    //Free status array
     free_status(status_codes, num_of_sols);
+    
     return 0;
 }
