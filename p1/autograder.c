@@ -41,6 +41,13 @@ void free_executables(char **executable_array, int size)
     {
         free(executable_array[i]);
     }
+    
+}
+
+void free_paramters(int* parameters, int size){
+
+    free(parameters);
+    
 }
 
 
@@ -324,6 +331,9 @@ int main(int argc, char *argv[])
 
     //Free status array
     free_status(status_codes, num_of_sols);
+
+    //free parameters array
+    free_paramters(parameters, number_of_parameters);
 
     return 0;
 }
