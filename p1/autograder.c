@@ -78,13 +78,15 @@ void update_status_codes(int **status_codes, pid_t pid, int index, int status)
 int get_total_lines(){
     int total_lines = 0;
     FILE *fptr = fopen("submissions.txt", "r");
+    //Fail can't open fail case
     if (fptr == NULL)
     {
         printf("submissions.txt was unable to be opened");
         exit(0);
     }
+    // Gets number of lines in submissions.txt to INIT executable array
     while (fgets(line, sizeof(line), fptr) != NULL)
-    { // Gets number of lines in submissions.txt to INIT executable array
+    { 
         total_lines += 1;
     }
 
@@ -94,15 +96,18 @@ int get_total_lines(){
 
 
 int get_number_of_parameters(int argc){
-    int number_of_parameters = (argc - 2); // Needs to subtract two because one argument is file name and another is the batch size
+
+    // Needs to subtract two because one argument is file name and another is the batch size
+    int number_of_parameters = (argc - 2); 
+
     return number_of_parameters;
 }
 
 
 int* initialize_and_populate_parameter_array(int number_of_parameters, char *argv[]) {
-    
+    //Create parameteres array
     int* parameters = malloc(number_of_parameters * sizeof(int));
-
+    //Malloc fail case
     if (parameters == NULL) {
         perror("Memory allocation failed");
         exit(0);
@@ -110,7 +115,8 @@ int* initialize_and_populate_parameter_array(int number_of_parameters, char *arg
 
     // Populate the array with command-line arguments converted to integers
     for (int i = 0; i < number_of_parameters; i++) {
-        parameters[i] = atoi(argv[2 + i]); // Convert String into Int as argv stores args as strings
+        // Convert String into Int as argv stores args as strings
+        parameters[i] = atoi(argv[2 + i]); 
     }
     
     return parameters;
@@ -119,11 +125,14 @@ int* initialize_and_populate_parameter_array(int number_of_parameters, char *arg
 
 
 int** create_status_codes_array(int number_of_parameters,int num_of_sols){
+
+    //Create the status codes array 
     int **status_codes = malloc((num_of_sols + 1) * sizeof(int *));
+    //Malloc fail case
     if (status_codes == NULL) 
     {
         perror("Failed to allocate memory for status_codes");
-        exit(EXIT_FAILURE);
+        exit(0);
     }
 
     // loop through and allocate memory to store pid, and parameters in each element
@@ -137,6 +146,7 @@ int** create_status_codes_array(int number_of_parameters,int num_of_sols){
             exit(EXIT_FAILURE);
         }
     }
+    //return status codes array
     return status_codes;
 }
 
@@ -144,26 +154,32 @@ int** create_status_codes_array(int number_of_parameters,int num_of_sols){
 
 //Initializes the executable array with the executables from submissions.txt
 int initialize_executable_array(char** executable_array, int total_lines){
+    //Init curr line and num of sols to track pos in array 
     int curr_line = 0;
     int num_of_sols = 0;
     FILE *fptr1 = fopen("submissions.txt", "r");
-
+    //Fail open fail case
     if (fptr1 == NULL)
     {
         printf("submissions.txt was unable to be opened");
-        return 1;
+        exit(0);
     }
-
+     // Gets each line of submissions.txt. This includes the Newline after each file which will be removed at bottom of func
     while (fgets(line, sizeof(line), fptr1) != NULL)
-    {                                                           // Gets each line of submissions.txt. This includes the Newline after each file
-        executable_array[curr_line] = malloc(strlen(line) + 1); // Need to malloc this mem as there was an issue with buffer being overwritten by last entry.
+    {           
+        // Need to malloc this mem as there was an issue with buffer being overwritten by last entry.                                              
+        executable_array[curr_line] = malloc(strlen(line) + 1);
+
+         // Malloc fail case
         if (executable_array[curr_line] == NULL)
-        { // Malloc fail case
+        {
             printf("Memory allocation failed\n");
             fclose(fptr1);
             return 1;
         }
-        strcpy(executable_array[curr_line], line); // Malloc success case and inserts each line into array
+        // Malloc success case and inserts each line into array
+        strcpy(executable_array[curr_line], line);
+        //Increase curr line and num of sols vars
         curr_line++;
         num_of_sols++;
     }
@@ -171,7 +187,9 @@ int initialize_executable_array(char** executable_array, int total_lines){
     for (int i = 0; i < total_lines; i++)
     {
         int length = strlen(executable_array[i]);
-        executable_array[i][length - 1] = '\0'; // Replaces the last character of the string with the end string symbol '\0'
+
+        // Replaces the last character of the string with the end string symbol '\0' by moving pointer
+        executable_array[i][length - 1] = '\0'; 
     }
 
     fclose(fptr1);
@@ -183,21 +201,27 @@ int initialize_executable_array(char** executable_array, int total_lines){
 void run_executables(int **status_codes, int* parameters, char** executable_array, int number_of_parameters, int total_lines, int batch_size, int status){
     for (int i = 0; i < number_of_parameters; i++) 
     {
-        int done_executables = 0; // Reset this for each parameter run
+        //Reset these 2 vars after each "run" of executables. 
+        int done_executables = 0; 
         int current_executable = 0;
 
         while (done_executables < total_lines) 
         {
             // Fork a batch of processes
-            int batch_count = 0; // Track how many were forked in the current batch
-            int num_finished = 0; // Track the number of finished children and later compare to the batch count
 
-            for (int b = 0; b < batch_size && current_executable < total_lines; b++) // Ensure we don't exceed total lines
+            // Track how many were forked in the current batch
+            int batch_count = 0; 
+            // Track the number of finished children and later compare to the batch count
+            int num_finished = 0; 
+            // Ensure we don't exceed total lines
+            for (int b = 0; b < batch_size && current_executable < total_lines; b++)
             {
-                sprintf(str, "%d", parameters[i]); // Format the parameter into string so can be passed into exec
-
+                // Format the parameter into string so can be passed into exec
+                sprintf(str, "%d", parameters[i]);
+                //Create fork up to batch size
                 pid_t pid = fork();
 
+                //Fork fail case
                 if (pid < 0) 
                 {
                     perror("Fork failed");
@@ -209,14 +233,19 @@ void run_executables(int **status_codes, int* parameters, char** executable_arra
 
                 if (pid == 0) // Child process
                 {
+                    //Run each exec with the last part of the file path
                     char *executable_name = strrchr(executable_array[current_executable], '/');
                     executable_name++;
+                    //Runs exec with each exe 
                     execl(executable_array[current_executable], executable_name, str, NULL);
                 }
-                current_executable++; // Move to the next executable
-                batch_count++; // Increment the number of processes in the current batch
+                // Move to the next executable
+                current_executable++; 
+                // Increment the number of processes in the current batch
+                batch_count++;
             }
-            while (num_finished < batch_count) // Wait for all in the current batch to finish
+            // Wait for all in the current batch to finish
+            while (num_finished < batch_count) 
             {
                 pid_t result_pid = waitpid(-1, &status, 0); 
                 if (result_pid > 0) 
@@ -233,8 +262,10 @@ void run_executables(int **status_codes, int* parameters, char** executable_arra
                     {
                         update_status_codes(status_codes, result_pid, i + 1, 3);
                     }
-                    num_finished++; // Successfully handled one process
-                    done_executables++; // Track total finished
+                    // Successfully handled one process
+                    num_finished++; 
+                    // Add one to done executables
+                    done_executables++; 
                 }
             }
         }
@@ -293,6 +324,6 @@ int main(int argc, char *argv[])
 
     //Free status array
     free_status(status_codes, num_of_sols);
-    
+
     return 0;
 }
