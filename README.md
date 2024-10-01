@@ -19,6 +19,6 @@ Group Information:
 
 Contributions of Each Member:
     Everyone worked on debugging and making the code more readable/understandable
-    Ethan: Worked on reading  the files and running through the executables in addition to commenting out the code
-    Noah: Worked on initial file i/o to appropriatly take in files in addition to refactoring the code 
-    Eric: Worked on the print function and created functions to free memory allocations
+    Ethan: Worked on running the desired executables with the entered parameters and storing their outputs.
+    Noah: Worked on initial file i/o to appropriatly take in files and refactored most of the code.
+    Eric: Worked on the print function and created functions to free memory allocations.

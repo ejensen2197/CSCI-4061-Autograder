@@ -92,10 +92,10 @@ void free_status(int **status_codes, int size)
  * @param index: type integer to indicate which index in the array to store the code
  * @param status: type integer of the status of the returned process 
  */
-void update_status_codes(int **status_codes, pid_t pid, int index, int status)
+void update_status_codes(int **status_codes, pid_t pid, int index, int status, int size)
 {
     // Iterate through array trying to match pid
-    for (int i = 0; i < MAX_EXE; i++)
+    for (int i = 0; i < size; i++)
     {
         // first element is always the pid
         if (status_codes[i][0] == pid) 
@@ -256,7 +256,7 @@ int initialize_executable_array(char** executable_array, int total_lines){
  * @param batch_size: type integer containing the number of processes that will be run at the same time
  * @param status: type integer to store the return value of the executable
  */
-void run_executables(int **status_codes, int* parameters, char** executable_array, int number_of_parameters, int total_lines, int batch_size, int status){
+void run_executables(int **status_codes, int* parameters, char** executable_array, int number_of_parameters, int total_lines, int batch_size, int status, int num_of_sols){
     for (int i = 0; i < number_of_parameters; i++) 
     {
         // Reset these 2 vars after each "run" of executables. 
@@ -313,12 +313,12 @@ void run_executables(int **status_codes, int* parameters, char** executable_arra
                         int answer = WEXITSTATUS(status);
                         if (answer == 0 || answer == 1) 
                         {
-                            update_status_codes(status_codes, result_pid, i + 1, answer);
+                            update_status_codes(status_codes, result_pid, i + 1, answer, num_of_sols);
                         }
                     } 
                     else
                     {
-                        update_status_codes(status_codes, result_pid, i + 1, 3);
+                        update_status_codes(status_codes, result_pid, i + 1, 3,num_of_sols);
                     }
                     // Successfully handled one process
                     num_finished++; 
@@ -372,7 +372,7 @@ int main(int argc, char *argv[])
     int **status_codes = create_status_codes_array(number_of_parameters,num_of_sols);
    
    //Runs the executables and updates the status codes array 
-    run_executables(status_codes, parameters, executable_array, number_of_parameters,total_lines,batch_size,status);
+    run_executables(status_codes, parameters, executable_array, number_of_parameters,total_lines,batch_size,status, num_of_sols);
 
     // Write the status codes out into the autograder.out file
     print_status(status_codes, executable_array, total_lines, number_of_parameters, parameters);
