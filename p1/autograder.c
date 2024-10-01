@@ -13,6 +13,7 @@ char str[64];
  */
 void print_status(int **status_codes, char **executable_array, int num_of_sols, int num_of_params,int* parameters)
 {
+    char buff[256];
     FILE *fptr = fopen("autograder.out", "w");
     if (fptr == NULL)
     {
@@ -22,22 +23,26 @@ void print_status(int **status_codes, char **executable_array, int num_of_sols, 
     {
         char *executable_name = strrchr(executable_array[i], '/');
         executable_name++;
-        fprintf(fptr, "%s", executable_name);
+        sprintf(buff, "%s", executable_name);  // Copy the executable name into the buffer
+        fputs(buff, fptr);
         for (int j = 0; j < num_of_params; j++){
             if (status_codes[i][j+1] == 0)
             {
-                fprintf(fptr, " %d(correct)", parameters[j]);
+                sprintf(buff, " %d(correct)", parameters[j]);
+                fputs(buff, fptr);
             }
             else if (status_codes[i][j+1] == 1)
             {
-                fprintf(fptr, " %d(incorrect)", parameters[j]);
+                sprintf(buff, " %d(incorrect)", parameters[j]);
+                fputs(buff, fptr);
             }
             else
             {
-                fprintf(fptr, " %d(crash)", parameters[j]);
+                sprintf(buff, " %d(crash)", parameters[j]);
+                fputs(buff, fptr);
             }
         }
-        fprintf(fptr,"\n");
+        fputs("\n", fptr);
     }
     fclose(fptr);
 }
