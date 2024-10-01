@@ -12,7 +12,7 @@ char str[64];
  * @param parameters: integer pointer to an array of each parameter to give each solution
  */
 void print_status(int **status_codes, char **executable_array, int num_of_sols, int num_of_params,int* parameters)
-{
+{  
     char buff[256];
     FILE *fptr = fopen("autograder.out", "w");
     if (fptr == NULL)
