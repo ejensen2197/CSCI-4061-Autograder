@@ -3,6 +3,14 @@
 char line[128];
 char str[64];
 
+/** 
+ * @brief read and write the statuses of each process to autograder.out
+ * @param status_codes: double integer pointer for a 2d array storing the status codes of every pid
+ * @param executable_array: double character pointer for a 2d array for storing the names of all the executables
+ * @param num_of_sols: integer storing total number of solutions 
+ * @param num_of_params: integer storing number of parameters the user gave to each solution
+ * @param parameters: integer pointer to an array of each parameter to give each solution
+ */
 void print_status(int **status_codes, char **executable_array, int num_of_sols, int num_of_params,int* parameters)
 {
     FILE *fptr = fopen("autograder.out", "w");
@@ -34,7 +42,11 @@ void print_status(int **status_codes, char **executable_array, int num_of_sols, 
     fclose(fptr);
 }
 
-
+/**
+ * @brief used to free all the memory used in the heap for executable_array
+ * @param executable_array: double character pointer for a 2d array for storing the names of all the executables
+ * @param size: type integer to indicate the size of executable_arary 
+ */
 void free_executables(char **executable_array, int size)
 {
     for (int i = 0; i < size; i++)
@@ -44,13 +56,22 @@ void free_executables(char **executable_array, int size)
     
 }
 
+/**
+ * @brief used to free all the memory used in the heap for parameters array
+ * @param parameters: integer pointer to an array of each parameter to give each solution
+ * @param size: type integer to indicate the size of parameters 
+ */
 void free_paramters(int* parameters, int size){
 
     free(parameters);
     
 }
 
-
+/**
+ * @brief used to free all the memory used in the heap for status_codes array
+ * @param status_codes: double integer pointer for a 2d array storing the status codes of every pid
+ * @param size: type integer to indicate the size of status_codes 
+ */
 void free_status(int **status_codes, int size)
 {
     for (int i = 0; i < size; i++)
@@ -64,7 +85,13 @@ void free_status(int **status_codes, int size)
 }
 
 
-// create a function to populate the status_codes array
+/**
+ * @brief updates status_codes with the status of a returned process
+ * @param status_codes: double integer pointer for a 2d array storing the status codes of every pid
+ * @param pid: type pid_t to indicate the pid of the returned process
+ * @param index: type integer to indicate which index in the array to store the code
+ * @param status: type integer of the status of the returned process 
+ */
 void update_status_codes(int **status_codes, pid_t pid, int index, int status)
 {
     // Iterate through array trying to match pid
@@ -81,7 +108,9 @@ void update_status_codes(int **status_codes, pid_t pid, int index, int status)
     }
 }
 
-
+/**
+ * @brief gets the total lines of submission.txt
+ */
 int get_total_lines(){
     int total_lines = 0;
     FILE *fptr = fopen("submissions.txt", "r");
@@ -101,7 +130,10 @@ int get_total_lines(){
     return total_lines;
 }
 
-
+/**
+ * @brief returns the number of parameters the user wants to use against the solutions
+ * @param argc: type integer to store the number of arguements the user gives to the program
+ */
 int get_number_of_parameters(int argc){
 
     // Needs to subtract two because one argument is file name and another is the batch size
@@ -110,11 +142,15 @@ int get_number_of_parameters(int argc){
     return number_of_parameters;
 }
 
-
+/**
+ * @brief creates the parameters array and stores the parameters in it
+ * @param number_of_parameters: type integer storing number of parameters to use on the solutions
+ * @param argv: character double pointer to store the nume arguements the user gives when the program is run
+ */
 int* initialize_and_populate_parameter_array(int number_of_parameters, char *argv[]) {
-    //Create parameteres array
+    // Create parameteres array
     int* parameters = malloc(number_of_parameters * sizeof(int));
-    //Malloc fail case
+    // Malloc fail case
     if (parameters == NULL) {
         perror("Memory allocation failed");
         exit(0);
@@ -130,12 +166,16 @@ int* initialize_and_populate_parameter_array(int number_of_parameters, char *arg
 }
 
 
-
+/**
+ * @brief mallocs enough space in the heap to store all the status codes
+ * @param number_of_parameters: type integer storing number of parameters to use on the solutions 
+ * @param num_of_sols: integer storing total number of solutions
+ */
 int** create_status_codes_array(int number_of_parameters,int num_of_sols){
 
-    //Create the status codes array 
+    // Create the status codes array 
     int **status_codes = malloc((num_of_sols + 1) * sizeof(int *));
-    //Malloc fail case
+    // Malloc fail case
     if (status_codes == NULL) 
     {
         perror("Failed to allocate memory for status_codes");
@@ -145,7 +185,7 @@ int** create_status_codes_array(int number_of_parameters,int num_of_sols){
     // loop through and allocate memory to store pid, and parameters in each element
     for (int i = 0; i < num_of_sols; i++) 
     {
-        //Makes room for params plus a PID for matching
+        // Makes room for params plus a PID for matching
         status_codes[i] = malloc((number_of_parameters + 1) * sizeof(int));
         if (status_codes[i] == NULL) 
         {
@@ -153,19 +193,22 @@ int** create_status_codes_array(int number_of_parameters,int num_of_sols){
             exit(EXIT_FAILURE);
         }
     }
-    //return status codes array
+    // return status codes array
     return status_codes;
 }
 
 
-
-//Initializes the executable array with the executables from submissions.txt
+/**
+ * @brief initializes the executable array with the executables from submissions.txt
+ * @param executable_array: double character pointer for a 2d array for storing the names of all the executables
+ * @param total_lines: type integer to store number of lines in submission.txt
+ */
 int initialize_executable_array(char** executable_array, int total_lines){
-    //Init curr line and num of sols to track pos in array 
+    // Init curr line and num of sols to track pos in array 
     int curr_line = 0;
     int num_of_sols = 0;
     FILE *fptr1 = fopen("submissions.txt", "r");
-    //Fail open fail case
+    // Fail open fail case
     if (fptr1 == NULL)
     {
         printf("submissions.txt was unable to be opened");
@@ -186,7 +229,7 @@ int initialize_executable_array(char** executable_array, int total_lines){
         }
         // Malloc success case and inserts each line into array
         strcpy(executable_array[curr_line], line);
-        //Increase curr line and num of sols vars
+        // Increase curr line and num of sols vars
         curr_line++;
         num_of_sols++;
     }
@@ -204,11 +247,19 @@ int initialize_executable_array(char** executable_array, int total_lines){
 }
 
 
-
+/**
+ * @brief run the executables in the solutions folder in set batch sizes keeping track of the return values of each process
+ * @param status_codes: double integer pointer for a 2d array storing the status codes of every pid
+ * @param executable_array: double character pointer for a 2d array for storing the names of all the executables
+ * @param number_of_parameters: type integer storing number of parameters to use on the solutions 
+ * @param total_lines: type integer to store number of lines in submission.txt
+ * @param batch_size: type integer containing the number of processes that will be run at the same time
+ * @param status: type integer to store the return value of the executable
+ */
 void run_executables(int **status_codes, int* parameters, char** executable_array, int number_of_parameters, int total_lines, int batch_size, int status){
     for (int i = 0; i < number_of_parameters; i++) 
     {
-        //Reset these 2 vars after each "run" of executables. 
+        // Reset these 2 vars after each "run" of executables. 
         int done_executables = 0; 
         int current_executable = 0;
 
@@ -225,10 +276,10 @@ void run_executables(int **status_codes, int* parameters, char** executable_arra
             {
                 // Format the parameter into string so can be passed into exec
                 sprintf(str, "%d", parameters[i]);
-                //Create fork up to batch size
+                // Create fork up to batch size
                 pid_t pid = fork();
 
-                //Fork fail case
+                // Fork fail case
                 if (pid < 0) 
                 {
                     perror("Fork failed");
@@ -240,10 +291,10 @@ void run_executables(int **status_codes, int* parameters, char** executable_arra
 
                 if (pid == 0) // Child process
                 {
-                    //Run each exec with the last part of the file path
+                    // Run each exec with the last part of the file path
                     char *executable_name = strrchr(executable_array[current_executable], '/');
                     executable_name++;
-                    //Runs exec with each exe 
+                    // Runs exec with each exe 
                     execl(executable_array[current_executable], executable_name, str, NULL);
                 }
                 // Move to the next executable

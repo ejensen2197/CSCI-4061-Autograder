@@ -7,7 +7,7 @@ Assmptions made outside of the document:
 
 Group Information:
     Group #12
-        Ethan Jensen    
+        Ethan Jensen    jens2543
         Noah Zahart     
         Eric Nguyen     nguy4911
 
