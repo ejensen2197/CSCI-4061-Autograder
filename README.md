@@ -3,12 +3,13 @@ Project 1 of CSCI 4061: Intro To Operating Systems. This is a basic autograder c
 
 How to compile the program:
 
-Assmptions made outside of the document:
+Assumptions made outside of the document:
 
 Group Information:
     Group #12
         Ethan Jensen    jens2543
-        Noah Zahart     
+        Noah Zahrt      zahrt003
         Eric Nguyen     nguy4911
 
 Contributions of Each Member:
+
