@@ -346,7 +346,11 @@ int main(int argc, char *argv[])
         printf("Usage: %s <batch> <p1> <p2> ... <pn>\n", argv[0]);
         return 1;
     }
-
+    //Enter parameters prompt if none are entered
+    if (argc == 2)
+    {
+        printf("Please enter parameters. \nUsage: %s <batch> <p1> <p2> ... <pn>\n", argv[0]);
+    }
     // Convert the first command-line argument to an integer to determine the batch size
     int batch_size = atoi(argv[1]);
 
