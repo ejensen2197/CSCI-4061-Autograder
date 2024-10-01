@@ -1,13 +1,3 @@
-solutions/j_sol
-solutions/m_sol
-solutions/c_sol
-solutions/d_sol
-solutions/q_sol
-solutions/p_sol
-solutions/e_sol
-solutions/b_sol
-solutions/l_sol
-solutions/k_sol
 solutions/t_sol
 solutions/s_sol
 solutions/a_sol
@@ -18,3 +8,13 @@ solutions/n_sol
 solutions/i_sol
 solutions/g_sol
 solutions/r_sol
+solutions/j_sol
+solutions/m_sol
+solutions/c_sol
+solutions/d_sol
+solutions/q_sol
+solutions/p_sol
+solutions/e_sol
+solutions/b_sol
+solutions/l_sol
+solutions/k_sol
