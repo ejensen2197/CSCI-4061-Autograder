@@ -17,7 +17,7 @@ void print_status(int **status_codes, char **executable_array, int num_of_sols, 
     FILE *fptr = fopen("autograder.out", "w");
     if (fptr == NULL)
     {
-        printf("autograder.out was unable to be opened");
+        perror("autograder.out was unable to be opened");
         exit(EXIT_FAILURE);
     }
     for (int i = 0; i < num_of_sols; i++)
@@ -46,7 +46,7 @@ void print_status(int **status_codes, char **executable_array, int num_of_sols, 
         fputs("\n", fptr);
     }
     if (fclose(fptr) == EOF){
-        printf("Error closing the file");
+        perror("Error closing the file");
         exit(EXIT_FAILURE);
     }
 }
@@ -126,7 +126,7 @@ int get_total_lines(){
     //Fail can't open fail case
     if (fptr == NULL)
     {
-        printf("submissions.txt was unable to be opened");
+        perror("submissions.txt was unable to be opened");
         exit(EXIT_FAILURE);
     }
     // Gets number of lines in submissions.txt to INIT executable array
@@ -136,7 +136,7 @@ int get_total_lines(){
     }
 
     if (fclose(fptr) == EOF){
-        printf("Error closing the file");
+        perror("Error closing the file");
         exit(EXIT_FAILURE);
     }
     return total_lines;
@@ -223,7 +223,7 @@ int initialize_executable_array(char** executable_array, int total_lines){
     // Fail open fail case
     if (fptr1 == NULL)
     {
-        printf("submissions.txt was unable to be opened");
+        perror("submissions.txt was unable to be opened");
         exit(EXIT_FAILURE);
     }
      // Gets each line of submissions.txt. This includes the Newline after each file which will be removed at bottom of func
@@ -235,9 +235,9 @@ int initialize_executable_array(char** executable_array, int total_lines){
          // Malloc fail case
         if (executable_array[curr_line] == NULL)
         {
-            printf("Memory allocation failed\n");
+            perror("Memory allocation failed\n");
             if (fclose(fptr1) == EOF){
-            printf("Error closing the file");
+            perror("Error closing the file");
             exit(EXIT_FAILURE);
             }
             return 1;
@@ -258,7 +258,7 @@ int initialize_executable_array(char** executable_array, int total_lines){
     }
 
     if (fclose(fptr1) == EOF){
-        printf("Error closing the file");
+        perror("Error closing the file");
         exit(EXIT_FAILURE);
     }
     return num_of_sols;
