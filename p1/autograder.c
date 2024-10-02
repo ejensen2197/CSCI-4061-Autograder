@@ -18,6 +18,7 @@ void print_status(int **status_codes, char **executable_array, int num_of_sols, 
     if (fptr == NULL)
     {
         printf("autograder.out was unable to be opened");
+        exit(EXIT_FAILURE);
     }
     for (int i = 0; i < num_of_sols; i++)
     {
@@ -44,7 +45,10 @@ void print_status(int **status_codes, char **executable_array, int num_of_sols, 
         }
         fputs("\n", fptr);
     }
-    fclose(fptr);
+    if (fclose(fptr) == EOF){
+        printf("Error closing the file");
+        exit(EXIT_FAILURE);
+    }
 }
 
 /**
@@ -123,7 +127,7 @@ int get_total_lines(){
     if (fptr == NULL)
     {
         printf("submissions.txt was unable to be opened");
-        exit(0);
+        exit(EXIT_FAILURE);
     }
     // Gets number of lines in submissions.txt to INIT executable array
     while (fgets(line, sizeof(line), fptr) != NULL)
@@ -131,7 +135,10 @@ int get_total_lines(){
         total_lines += 1;
     }
 
-    fclose(fptr);
+    if (fclose(fptr) == EOF){
+        printf("Error closing the file");
+        exit(EXIT_FAILURE);
+    }
     return total_lines;
 }
 
@@ -158,7 +165,7 @@ int* initialize_and_populate_parameter_array(int number_of_parameters, char *arg
     // Malloc fail case
     if (parameters == NULL) {
         perror("Memory allocation failed");
-        exit(0);
+        exit(EXIT_FAILURE);
     }
 
     // Populate the array with command-line arguments converted to integers
@@ -184,7 +191,7 @@ int** create_status_codes_array(int number_of_parameters,int num_of_sols){
     if (status_codes == NULL) 
     {
         perror("Failed to allocate memory for status_codes");
-        exit(0);
+        exit(EXIT_FAILURE);
     }
 
     // loop through and allocate memory to store pid, and parameters in each element
@@ -217,7 +224,7 @@ int initialize_executable_array(char** executable_array, int total_lines){
     if (fptr1 == NULL)
     {
         printf("submissions.txt was unable to be opened");
-        exit(0);
+        exit(EXIT_FAILURE);
     }
      // Gets each line of submissions.txt. This includes the Newline after each file which will be removed at bottom of func
     while (fgets(line, sizeof(line), fptr1) != NULL)
@@ -229,7 +236,10 @@ int initialize_executable_array(char** executable_array, int total_lines){
         if (executable_array[curr_line] == NULL)
         {
             printf("Memory allocation failed\n");
-            fclose(fptr1);
+            if (fclose(fptr1) == EOF){
+            printf("Error closing the file");
+            exit(EXIT_FAILURE);
+            }
             return 1;
         }
         // Malloc success case and inserts each line into array
@@ -247,7 +257,10 @@ int initialize_executable_array(char** executable_array, int total_lines){
         executable_array[i][length - 1] = '\0'; 
     }
 
-    fclose(fptr1);
+    if (fclose(fptr1) == EOF){
+        printf("Error closing the file");
+        exit(EXIT_FAILURE);
+    }
     return num_of_sols;
 }
 
@@ -288,7 +301,7 @@ void run_executables(int **status_codes, int* parameters, char** executable_arra
                 if (pid < 0) 
                 {
                     perror("Fork failed");
-                    exit(1);
+                    exit(EXIT_FAILURE);
                 }
 
                 // store the pid in the first element of the array to associate the status codes of each pid
